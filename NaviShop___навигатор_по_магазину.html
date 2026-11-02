@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NaviShop — навигатор по магазину</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#ffffff;--card:#ffffff;--text:#16181d;--muted:#7a7f8a;--accent:#3b5bdb;--accent2:#eef1ff;--line:#ececf1;--path:#e8590c}
+:root[data-theme="dark"]{--bg:#111318;--card:#1a1d24;--text:#eceef3;--muted:#8d93a1;--accent:#7c93ff;--accent2:#222842;--line:#2a2e38;--path:#ff922b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;max-width:520px;margin:0 auto;padding-bottom:76px}
+header{padding:14px 16px 8px}
+h1{margin:0;font-size:20px}
+select,input{font:inherit;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;width:100%}
+select{margin-top:8px}
+main{padding:8px 16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.emoji{font-size:44px;text-align:center}
+.name{font-weight:600;font-size:14px;margin:4px 0 2px}
+.zone{font-size:12px;color:var(--muted)}
+.price{font-weight:700;margin:4px 0}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:8px 10px;background:var(--accent);color:#fff;font-weight:600}
+button.sec{background:var(--accent2);color:var(--accent)}
+.row{display:flex;gap:6px}.row button{flex:1}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;background:none;color:var(--muted);border-radius:0;padding:10px 0;font-size:12px}
+nav button span{display:block;font-size:20px}
+nav button.on{color:var(--accent)}
+.hide{display:none}
+.item{display:flex;align-items:center;gap:10px;margin-top:10px}
+.item .emoji{font-size:30px}.item .grow{flex:1}
+.qty button{padding:4px 10px}
+.total{font-size:20px;font-weight:700;text-align:right;margin-top:14px}
+.map{overflow-x:auto}
+svg{width:100%;height:auto;display:block}
+.hint{color:var(--muted);font-size:13px;margin:8px 0}
+.result{margin-top:12px}
+#welcome{display:none;padding:28px 16px}
+body.start #welcome{display:block}
+body.start header,body.start main,body.start nav{display:none}
+#welcome h2{margin:0 0 4px;font-size:24px}
+#welcome .sub{color:var(--muted);margin:0 0 18px}
+.store{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin-top:10px;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:14px;font-weight:400}
+.store .si{font-size:30px}.store .grow{flex:1}.store small{color:var(--muted)}
+body,.card,nav,select,input,.store{transition:background .3s,color .3s,border-color .3s}
+.card{box-shadow:0 1px 3px rgba(20,24,40,.05);animation:up .35s ease both}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+button{position:relative;overflow:hidden;transition:transform .15s,box-shadow .2s,background .2s,color .2s,filter .2s}
+button:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(20,24,40,.15);filter:brightness(1.05)}
+button:active{transform:scale(.93);box-shadow:none}
+nav button:hover{box-shadow:none;transform:translateY(-2px)}
+nav button.on span{animation:bounce .4s ease}
+@keyframes bounce{40%{transform:translateY(-6px) scale(1.15)}}
+.rip{position:absolute;border-radius:50%;background:currentColor;opacity:.25;transform:scale(0);animation:rip .6s ease-out;pointer-events:none}
+@keyframes rip{to{transform:scale(2.5);opacity:0}}
+#cnt.bump{display:inline-block;animation:bounce .4s ease}
+.emoji img{width:100%;height:96px;object-fit:contain;display:block}
+.item .emoji{width:48px}.item .emoji img{height:48px}
+#welcomeList{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#welcomeList .store{flex-direction:column;justify-content:center;text-align:center;aspect-ratio:1/1;margin-top:0;padding:12px;gap:6px}
+#welcomeList .store .si{font-size:44px}
+#welcomeList .store .grow{flex:none}
+#welcomeList .store>span:last-child{display:none}
+#welcomeList .store:last-child:nth-child(odd){grid-column:1/-1;width:calc(50% - 6px);justify-self:center}
+.tiles:not(.hide){display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;aspect-ratio:1/1;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:12px;font-weight:600;text-align:center}
+.tile .si{font-size:44px}.tile small{color:var(--muted);font-weight:400}
+.tile.all{grid-column:1/-1;aspect-ratio:auto;flex-direction:row;padding:16px;gap:12px}.tile.all .si{font-size:28px}
+.warn{font-size:11px;font-weight:600;color:#fff;background:#e03131;border-radius:6px;padding:2px 6px;margin-left:4px;vertical-align:middle}
+.logo{object-fit:contain;background:#fff;border-radius:12px;padding:4px}
+#welcomeList .logo{width:84px;height:64px}
+.logo.mini{width:26px;height:22px;padding:2px;border-radius:6px;vertical-align:middle;margin-right:4px;border:1px solid var(--line)}
+/* Минималистичный стиль */
+:root{--soft:#f6f7f9}
+:root[data-theme="dark"]{--soft:#1f2330}
+body{letter-spacing:-.01em}
+header{padding:16px 20px 6px}main{padding:8px 20px}
+h1{font-size:19px;letter-spacing:-.02em}
+.card{border-radius:18px;box-shadow:none}
+nav{background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+input{background:var(--soft);border:1px solid transparent;border-radius:14px;padding:12px 14px}
+input:focus{outline:0;border-color:var(--accent)}
+button{border-radius:12px}
+button:hover{box-shadow:none;filter:none}
+.tile{background:var(--soft);border-color:transparent;border-radius:20px}
+.themeBtn{border-radius:50%;width:38px;height:38px;padding:0}
+.logo{background:#fff}
+#welcome{padding:22px 20px 40px}
+#welcome .brand{display:flex;align-items:center;justify-content:space-between;font-weight:700;letter-spacing:.02em}
+#welcome h2{font-size:32px;line-height:1.15;margin:28px 0 8px;letter-spacing:-.03em}
+#welcome .sub{font-size:15px;margin:0 0 22px}
+#welcomeList{gap:14px}
+#welcomeList .store{background:var(--soft);border:1px solid transparent;border-radius:22px;padding:14px 10px;gap:4px}
+#welcomeList .store:hover{border-color:var(--line);background:var(--card);box-shadow:0 8px 24px rgba(20,24,40,.08)}
+#welcomeList .logo{width:92px;height:68px;padding:8px;border-radius:16px;margin-bottom:6px}
+#welcomeList .store .grow{display:flex;flex-direction:column;align-items:center;gap:2px}
+#welcomeList .store b{font-size:15px}
+#welcomeList .store small{font-size:12px}
+.lv::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:5px;vertical-align:middle}
+.lv.low::before{background:var(--accent)}.lv.high::before{background:var(--path)}
+.feat{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:28px}
+.feat div{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.feat span{font-size:18px}
+.stat{margin-top:22px;font-size:12px;color:var(--muted);text-align:center;letter-spacing:.04em}
+#about{position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;padding-top:env(safe-area-inset-top,0px)}
+#about:not(.hide){display:block;animation:up .3s ease both}
+.aboutIn{max-width:520px;margin:0 auto;padding:20px}
+.aboutIn h2{font-size:30px;margin:22px 0 6px;letter-spacing:-.03em}
+.aboutIn h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:24px 0 6px}
+.aboutIn .lead{font-size:17px;line-height:1.45}
+.aboutIn ul{padding-left:18px;line-height:1.8}
+.aboutIn .note{color:var(--muted);font-size:13px;margin-top:24px}
+.aboutBtn{border-radius:19px;height:38px;padding:0 14px;flex:none}
+.brandBtn{background:none;color:var(--text);font-size:19px;font-weight:700;padding:0;text-align:left;letter-spacing:-.02em}
+.brandBtn:hover{background:none;transform:none;opacity:.7}
+</style>
+</head>
+<body class="start">
+<section id="welcome">
+  <div class="brand"><span>● NaviShop</span><span style="display:flex;gap:8px"><button class="sec aboutBtn">О нас</button><button class="sec themeBtn" style="flex:none">🌙</button></span></div>
+  <h2>Где будем<br>делать покупки?</h2>
+  <p class="sub">Выберите магазин — покажем каталог, цены и путь каждому товару.</p>
+  <div id="welcomeList"></div>
+  <div class="feat"><div><span>🛍️</span>Каталог с фото и ценами</div><div><span>🧭</span>Путь по магазину</div><div><span>📷</span>Сканер штрихкодов</div><div><span>🧺</span>Список покупок</div></div>
+  <div class="stat" id="stat"></div>
+</section>
+<header>
+  <div class="row" style="align-items:center"><button id="back" class="brandBtn" style="flex:1" title="В главное меню">● NaviShop</button><button class="sec aboutBtn">О нас</button><button class="sec themeBtn" style="flex:none">🌙</button></div>
+  <div class="zone" id="curStore" style="margin-top:4px"></div>
+</header>
+<main>
+  <section id="tab-catalog">
+    <input id="q" type="search" placeholder="Поиск товара по названию…">
+    <div id="cats" class="tiles"></div>
+    <div id="prods" class="hide">
+      <div class="row" style="align-items:center;margin-top:10px"><button class="sec" id="catBack" style="flex:none">‹ Категории</button><b id="catTitle" style="flex:1;text-align:right"></b></div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </section>
+
+  <section id="tab-map" class="hide">
+    <div class="hint" id="mapHint">Выберите товар в каталоге и нажмите «Путь».</div>
+    <div class="card map"><svg id="svg" viewBox="0 0 300 360"></svg></div>
+  </section>
+
+  <section id="tab-scan" class="hide">
+    <div class="hint">Сканер штрихкодов (демо): введите код или нажмите на пример.</div>
+    <input id="code" inputmode="numeric" placeholder="Штрихкод, например 4600001">
+    <div class="row" style="margin-top:8px">
+      <button id="scanBtn">Сканировать</button>
+      <button class="sec" id="rndBtn">Пример</button>
+    </div>
+    <div class="result" id="scanRes"></div>
+  </section>
+
+  <section id="tab-cart" class="hide">
+    <div id="cart"></div>
+    <div class="total" id="total"></div>
+  </section>
+</main>
+<nav id="nav">
+  <button data-t="catalog" class="on"><span>🛍️</span>Каталог</button>
+  <button data-t="map"><span>🧭</span>Карта</button>
+  <button data-t="scan"><span>📷</span>Скан</button>
+  <button data-t="cart"><span>🧺</span><b id="cnt">Корзина</b></button>
+</nav>
+
+<div id="about" class="hide">
+  <div class="aboutIn">
+    <button class="sec" id="aboutClose" style="flex:none">‹ Назад</button>
+    <h2>NaviShop</h2>
+    <p class="lead">Мобильное приложение, которое помогает покупателям быстро находить нужные товары в продуктовом магазине.</p>
+    <h3>Цель</h3>
+    <p>Сделать покупки быстрее, удобнее и проще: помочь находить товары и узнавать их цены.</p>
+    <h3>Что умеет</h3>
+    <ul><li>Выбор магазина и категории товара</li><li>Каталог с фотографиями и ценами</li><li>Поиск по названию</li><li>Навигатор: путь к товару внутри магазина</li><li>Сканер штрихкодов</li><li>Корзина со списком покупок и подсчётом суммы</li></ul>
+    <p class="note">Демо-версия: цены и наличие товаров условные.</p>
+  </div>
+</div>
+<script src="NaviShop.js"></script>
+</body>
+</html>
